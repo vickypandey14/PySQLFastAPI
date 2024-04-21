@@ -32,6 +32,13 @@ async def create_post(post: PostBase, db: db_dependency):
     db_post = models.Post(**post.model_dump())
     db.add(db_post)
     db.commit()
+    
+@app.get("/posts/{post_id}", status_code=status.HTTP_200_OK)
+async def read_post(post_id: int, db: db_dependency):
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    return post
 
 @app.post("/users/", status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserBase, db: db_dependency):
