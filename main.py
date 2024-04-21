@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Annotated
 import models
-from database import engine, sessionLocal
+from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 
 app = FastAPI()
@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     
     
 def get_db():
-    db = sessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:
@@ -26,6 +26,12 @@ def get_db():
    
         
 db_dependency = Annotated[Session, Depends(get_db)]
+
+@app.post("/posts/", status_code=status.HTTP_201_CREATED)
+async def create_post(post: PostBase, db: db_dependency):
+    db_post = models.Post(**post.model_dump())
+    db.add(db_post)
+    db.commit()
 
 @app.post("/users/", status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserBase, db: db_dependency):
